@@ -18,7 +18,7 @@ pipeline {
             when {
                 branch 'master'
             }
-            script {
+            steps {
                 try {
                     sh "docker rm sls_api"
                     sh "docker stop sls_api"
