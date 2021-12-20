@@ -3,7 +3,7 @@ pipeline {
     stages {
         stage('Build Docker Image') {
             when {
-                branch 'master'
+                branch 'main'
             }
             steps {
                 script {
@@ -16,7 +16,7 @@ pipeline {
         }
         stage('Run Docker Image') {
             when {
-                branch 'master'
+                branch 'main'
             }
             steps {
                 sh 'docker rm sls_api'
