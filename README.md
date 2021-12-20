@@ -31,10 +31,3 @@ chmod +x /usr/bin/runway
 DEPLOY_ENVIRONMENT=dev runway deploy --ci
 DEPLOY_ENVIRONMENT=dev runway destroy --ci
 ``` 
-
-# Jenkins Preparations steps
-
-- Initialize Jenkins
-- Configure Credentials:
-  - github_key (username & password)
-- Configure System Github Server
