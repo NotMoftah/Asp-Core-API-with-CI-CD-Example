@@ -1,28 +1,28 @@
 Parameters:
   DevelopmentInstanceSubnetId:
     Description: Choose one of default vpc subnets to place the development server.
-    Type: 'AWS::EC2::Subnet::Id'
+    Type: "AWS::EC2::Subnet::Id"
     ConstraintDescription: must be the id of an existing subnet of default vpc.
   DevelopmentInstanceKeyName:
     Description: Choose an existing EC2 KeyPair to enable SSH access to the instances.
-    Type: 'AWS::EC2::KeyPair::KeyName'
+    Type: "AWS::EC2::KeyPair::KeyName"
     ConstraintDescription: must be the name of an existing EC2 KeyPair.
-  DevelopmentInstanceAmi: 
+  DevelopmentInstanceAmi:
     Description: AMI ID. Leave default for Amazon Linux 2 lts.
-    Type: 'AWS::SSM::Parameter::Value<AWS::EC2::Image::Id>'
-    Default: '/aws/service/ami-amazon-linux-latest/amzn2-ami-hvm-x86_64-gp2'
+    Type: "AWS::SSM::Parameter::Value<AWS::EC2::Image::Id>"
+    Default: "/aws/service/ami-amazon-linux-latest/amzn2-ami-hvm-x86_64-gp2"
   DevelopmentInstanceType:
     Description: Choose instance type. Default is t3.medium.
     Type: String
     Default: t3.medium
   JenkinsMasterSecurityGroupId:
-    Type: 'AWS::EC2::SecurityGroup::Id'
+    Type: "AWS::EC2::SecurityGroup::Id"
 
-Resources:  
+Resources:
   DevelopmentInstance:
     Type: AWS::EC2::Instance
     Properties:
-      ImageId: !Ref DevelopmentInstanceAmi 
+      ImageId: !Ref DevelopmentInstanceAmi
       InstanceType: !Ref DevelopmentInstanceType
       SubnetId: !Ref DevelopmentInstanceSubnetId
       SecurityGroupIds:
@@ -34,35 +34,37 @@ Resources:
         - Key: "Name"
           Value: Development-Master
       UserData:
-        'Fn::Base64':
-          !Sub |
-            #!/bin/bash
-            yum update -y
-            
-            # Install Jenkins
-            amazon-linux-extras install epel -y
-            yum install git -y
-            wget -O /etc/yum.repos.d/jenkins.repo https://pkg.jenkins.io/redhat-stable/jenkins.repo
-            rpm --import https://pkg.jenkins.io/redhat-stable/jenkins.io.key
-            yum upgrade -y
-            yum install jenkins java-1.8.0-openjdk-devel -y
-            systemctl daemon-reload
-            systemctl start jenkins
-            
-            # Install Onica Runway binary
-            cd /home/ec2-user
-            curl -L https://oni.ca/runway/latest/linux -o /usr/bin/runway
-            chmod +x /usr/bin/runway
+        "Fn::Base64": !Sub |
+          #!/bin/bash
+          yum update -y
 
+          # Install Docker
+          amazon-linux-extras install docker -y
+          yum install docker -y
+          usermod -a -G docker ec2-user
+          service docker start
+
+          # Install Jenkins
+          amazon-linux-extras install epel -y
+          yum install git -y
+          wget -O /etc/yum.repos.d/jenkins.repo https://pkg.jenkins.io/redhat-stable/jenkins.repo
+          rpm --import https://pkg.jenkins.io/redhat-stable/jenkins.io.key
+          yum upgrade -y
+          yum install jenkins java-1.8.0-openjdk-devel -y
+          systemctl daemon-reload
+          systemctl start jenkins
+
+          # Install Onica Runway binary
+          curl -L https://oni.ca/runway/latest/linux -o /usr/bin/runway
+          chmod +x /usr/bin/runway
 
 Outputs:
   DevelopmentInstanceSshConnection:
     Value: !Sub |
-              ssh -i ${DevelopmentInstance} ec2-user@${DevelopmentInstance.PublicDnsName}
+      ssh -i "${DevelopmentInstanceKeyName}" ec2-user@${DevelopmentInstance.PublicDnsName}
   JenkinsDashboardUrl:
     Value: !Join
-      - ''
+      - ""
       - - http://
         - !GetAtt DevelopmentInstance.PublicDnsName
         - :8080
-  

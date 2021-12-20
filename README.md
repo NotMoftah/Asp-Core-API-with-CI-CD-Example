@@ -1,4 +1,4 @@
-# SlsApi
+# Sls Api
 # Docker Useful commands
 ## Prepare, Run, then go interactive with docker container
 ```sh
@@ -20,8 +20,21 @@ docker image rm sls_api:latest
 ssh-keygen -b 2048 -t rsa -f ~/.ssh/slskey -q -N ""
 aws ec2 import-key-pair --key-name "slskey" --public-key-material fileb://~/.ssh/slskey.pub
 ```
+## Install Runway as linux binary
+```sh
+curl -L https://oni.ca/runway/latest/linux -o /usr/bin/runway
+chmod +x /usr/bin/runway
+```
+### [Other Runway installations](https://docs.onica.com/projects/runway/en/stable/installation.html)
 ## Runway Infrastructure Deploy & Destroy
 ```sh
 DEPLOY_ENVIRONMENT=dev runway deploy --ci
 DEPLOY_ENVIRONMENT=dev runway destroy --ci
 ``` 
+
+# Jenkins Preparations steps
+
+- Initialize Jenkins
+- Create Credentials:
+  1. dockerhub_login (Username & Password)
+  2. github_login (Username & Password)
