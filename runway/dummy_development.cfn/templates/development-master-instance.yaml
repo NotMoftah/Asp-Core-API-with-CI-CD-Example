@@ -73,7 +73,7 @@ Outputs:
       ssh -i "${DevelopmentInstanceKeyName}" ec2-user@${DevelopmentInstance.PublicDnsName}
   DevelopmentInstancePublicDns:
     Value: !Sub |
-      http://{DevelopmentInstance.PublicDnsName}
+      http://${DevelopmentInstance.PublicDnsName}
   JenkinsDashboardUrl:
     Value: !Join
       - ""
