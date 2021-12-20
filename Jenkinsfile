@@ -21,7 +21,7 @@ pipeline {
             steps {
                 docker stop sls_api
                 docker rm sls_api
-                docker container run -d --restart always --name sls_api -p 80:80 -p 443:443  sls_api:${env.BUILD_NUMBER}
+                docker container run -d --restart always --name sls_api -p "80:80" -p "443:443"  "sls_api:${env.BUILD_NUMBER}"
             }
         }
 }
