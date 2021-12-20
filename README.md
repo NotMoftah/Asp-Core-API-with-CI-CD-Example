@@ -35,6 +35,6 @@ DEPLOY_ENVIRONMENT=dev runway destroy --ci
 # Jenkins Preparations steps
 
 - Initialize Jenkins
-- Create Credentials:
-  1. dockerhub_login (Username & Password)
-  2. github_login (Username & Password)
+- Configure Credentials:
+  - github_key (username & password)
+- Configure System Github Server
