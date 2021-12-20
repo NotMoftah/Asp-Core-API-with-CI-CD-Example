@@ -6,12 +6,7 @@ pipeline {
                 branch 'main'
             }
             steps {
-                script {
-                    app = docker.build("sls_api")
-                    app.inside {
-                        sh 'echo $(curl localhost:80/weatherforecast)'
-                    }
-                }
+                sh 'docker build -t sls_api:latest .'
             }
         }
         stage('Run Docker Image') {
@@ -21,7 +16,7 @@ pipeline {
             steps {
                 sh 'docker rm sls_api'
                 sh 'docker stop sls_api'
-                sh 'docker container run -d --restart always --name sls_api -p 80:80 -p 443:443 sls_api:${env.BUILD_NUMBER}'
+                sh 'docker container run -d --restart always --name sls_api -p 80:80 -p 443:443 sls_api:latest'
             }
         }
     }
