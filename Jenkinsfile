@@ -14,8 +14,8 @@ pipeline {
                 branch 'main'
             }
             steps {
-                sh 'docker stop sls_api' || echo "No Running container"
-                sh 'docker rm sls_api' || echo "No Existing container"
+                sh 'docker stop sls_api || echo \"No Running container\"'
+                sh 'docker rm sls_api || echo \"No Existing container\"'
                 sh 'docker container run -d --restart always --name sls_api -p 80:80 -p 443:443 sls_api:latest'
             }
         }
