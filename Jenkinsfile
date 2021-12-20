@@ -18,8 +18,8 @@ pipeline {
             when {
                 branch 'master'
             }
+            docker stop sls_api
             steps {
-                sh docker stop sls_api
                 sh docker rm sls_api
                 sh docker container run -d --restart always --name sls_api -p '80:80' -p '443:443'  'sls_api:${env.BUILD_NUMBER}'
             }
