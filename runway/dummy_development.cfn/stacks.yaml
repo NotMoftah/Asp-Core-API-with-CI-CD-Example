@@ -20,6 +20,7 @@ stacks:
       DevelopmentInstanceAmi: '/aws/service/ami-amazon-linux-latest/amzn2-ami-hvm-x86_64-gp2'
       DevelopmentInstanceType: t3.medium
       JenkinsMasterSecurityGroupId: ${output vpcsecurity::JenkinsMasterSecurityGroupId}
+      WebServerSecurityGroupId: ${output vpcsecurity::WebServerSecurityGroupId}
 
 
 tags:

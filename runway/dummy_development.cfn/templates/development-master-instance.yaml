@@ -17,6 +17,8 @@ Parameters:
     Default: t3.medium
   JenkinsMasterSecurityGroupId:
     Type: "AWS::EC2::SecurityGroup::Id"
+  WebServerSecurityGroupId:
+    Type: "AWS::EC2::SecurityGroup::Id"
 
 Resources:
   DevelopmentInstance:
@@ -27,6 +29,7 @@ Resources:
       SubnetId: !Ref DevelopmentInstanceSubnetId
       SecurityGroupIds:
         - !Ref JenkinsMasterSecurityGroupId
+        - !Ref WebServerSecurityGroupId
       KeyName: !Ref DevelopmentInstanceKeyName
       Tags:
         - Key: "Cluster"
@@ -54,6 +57,12 @@ Resources:
           systemctl daemon-reload
           systemctl start jenkins
 
+          # Configure Jenkins to use docker
+          gpasswd -a jenkins docker
+          systemctl daemon-reload
+          systemctl restart docker
+          sudo service jenkins restart
+
           # Install Onica Runway binary
           curl -L https://oni.ca/runway/latest/linux -o /usr/bin/runway
           chmod +x /usr/bin/runway
@@ -62,6 +71,9 @@ Outputs:
   DevelopmentInstanceSshConnection:
     Value: !Sub |
       ssh -i "${DevelopmentInstanceKeyName}" ec2-user@${DevelopmentInstance.PublicDnsName}
+  DevelopmentInstancePublicDns:
+    Value: !Sub |
+      http://{DevelopmentInstance.PublicDnsName}
   JenkinsDashboardUrl:
     Value: !Join
       - ""
