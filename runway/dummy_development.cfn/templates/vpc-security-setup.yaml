@@ -1,0 +1,97 @@
+Parameters:
+  VpcStackName: 
+      Description: Name of a deployed stack contains needed Vpc resources.
+      Type: String
+      MinLength : '1'
+      MaxLength : '255'
+      AllowedPattern : ^[a-zA-Z][-a-zA-Z0-9]*$
+  
+Resources:
+  # Jenkins Master SG
+  JenkinsMasterSecurityGroup:
+    Type: 'AWS::EC2::SecurityGroup'
+    Properties:
+      GroupDescription: Jenkins Master SG
+      VpcId: !ImportValue 
+        'Fn::Sub': ${VpcStackName}-VPCID
+  JenkinsMasterSecurityGroupOutboundRule:
+    Type: AWS::EC2::SecurityGroupEgress
+    Properties:
+      GroupId: !GetAtt JenkinsMasterSecurityGroup.GroupId
+      IpProtocol: tcp
+      FromPort: 0
+      ToPort: 65535
+      CidrIp: '0.0.0.0/0'
+  JenkinsMasterSecurityGroupInboundPublicSshRule:
+   Type: 'AWS::EC2::SecurityGroupIngress'
+   Properties:
+      GroupId: !GetAtt JenkinsMasterSecurityGroup.GroupId
+      IpProtocol: tcp
+      FromPort: 22
+      ToPort: 22
+      CidrIp: 0.0.0.0/0
+  JenkinsMasterSecurityGroupInboundPublicHttpRule:
+   Type: 'AWS::EC2::SecurityGroupIngress'
+   Properties:
+      GroupId: !GetAtt JenkinsMasterSecurityGroup.GroupId
+      IpProtocol: tcp
+      FromPort: 8080
+      ToPort: 8080
+      CidrIp: '0.0.0.0/0'
+  
+  # Jenkins Master SG
+  WebServerSecurityGroup:
+    Type: 'AWS::EC2::SecurityGroup'
+    Properties:
+      GroupDescription: Public Web server SG
+      VpcId: !ImportValue 
+        'Fn::Sub': ${VpcStackName}-VPCID
+  WebServerSecurityGroupOutboundRule:
+    Type: AWS::EC2::SecurityGroupEgress
+    Properties:
+      GroupId: !GetAtt WebServerSecurityGroup.GroupId
+      IpProtocol: tcp
+      FromPort: 0
+      ToPort: 65535
+      CidrIp: '0.0.0.0/0'
+  WebServerSecurityGroupInboundPublicSshRule:
+   Type: 'AWS::EC2::SecurityGroupIngress'
+   Properties:
+      GroupId: !GetAtt WebServerSecurityGroup.GroupId
+      IpProtocol: tcp
+      FromPort: 22
+      ToPort: 22
+      CidrIp: 0.0.0.0/0
+  WebServerSecurityGroupInboundPublicHttpRule:
+   Type: 'AWS::EC2::SecurityGroupIngress'
+   Properties:
+      GroupId: !GetAtt WebServerSecurityGroup.GroupId
+      IpProtocol: tcp
+      FromPort: 80
+      ToPort: 80
+      CidrIp: '0.0.0.0/0'
+  WebServerSecurityGroupInboundPublicHttpsRule:
+   Type: 'AWS::EC2::SecurityGroupIngress'
+   Properties:
+      GroupId: !GetAtt WebServerSecurityGroup.GroupId
+      IpProtocol: tcp
+      FromPort: 443
+      ToPort: 443
+      CidrIp: '0.0.0.0/0'
+
+Outputs:
+  VPCID:
+    Value: !ImportValue 
+      'Fn::Sub': ${VpcStackName}-VPCID
+  PublicASubnetId:
+    Value: !ImportValue 
+      'Fn::Sub': ${VpcStackName}-PublicASubnetId
+  PublicBSubnetId:
+    Value: !ImportValue 
+      'Fn::Sub': ${VpcStackName}-PublicBSubnetId
+  
+  JenkinsMasterSecurityGroupId:
+    Value: !GetAtt JenkinsMasterSecurityGroup.GroupId
+  WebServerSecurityGroupId:
+    Value: !GetAtt WebServerSecurityGroup.GroupId
+    

@@ -1,0 +1,30 @@
+namespace: ${namespace}
+cfngin_bucket: ${cfngin_bucket_name} 
+sys_path: ./
+
+stacks:
+  vpcsecurity:
+    name: vpcsecurity-${environment}
+    template_path: templates/vpc-security-setup.yaml
+    variables:
+      VpcStackName: ${namespace}-vpc
+
+  developmentmasterinstance:
+    name: developmentmasterinstance-${environment}
+    template_path: templates/development-master-instance.yaml
+    requires:
+      - vpcsecurity
+    variables:
+      DevelopmentInstanceSubnetId: ${output vpcsecurity::PublicASubnetId}
+      DevelopmentInstanceKeyName: ${ec2key_name}
+      DevelopmentInstanceAmi: '/aws/service/ami-amazon-linux-latest/amzn2-ami-hvm-x86_64-gp2'
+      DevelopmentInstanceType: t3.medium
+      JenkinsMasterSecurityGroupId: ${output vpcsecurity::JenkinsMasterSecurityGroupId}
+      WebServerSecurityGroupId: ${output vpcsecurity::WebServerSecurityGroupId}
+
+
+tags:
+  Namespace: ${namespace}
+  CreatedBy: ${author}
+
+
