@@ -24,12 +24,67 @@ namespace SlsApi.Controllers
             this.roleManager = roleManager;
         }
 
+        #region Roles In General
+
         [HttpGet]
         [Authorize(Roles = ApplicationRoles.Admin)]
-        public IEnumerable<ApplicationRole> Get()
+        public ActionResult<IEnumerable<ApplicationRole>> Get()
         {
             return roleManager.Roles.ToList();
         }
+
+        [HttpPost]
+        [Authorize(Roles = ApplicationRoles.Admin)]
+        [Consumes(MediaTypeNames.Application.Json)]
+        public async Task<IActionResult> CreateRole([FromBody] NewRoleModel model)
+        {
+            if (!ModelState.IsValid)
+                return BadRequest(ModelState);
+
+            var roleExist = await roleManager.RoleExistsAsync(model.Name);
+
+            if (roleExist == false)
+            {
+                var result = await roleManager.CreateAsync(new ApplicationRole
+                {
+                    Name = model.Name,
+                });
+
+                if (result.Succeeded == false)
+                    return Problem();
+            }
+
+            var role = await roleManager.FindByNameAsync(model.Name);
+
+            return Ok(new CreatedResponse
+            { 
+                Success = role != null,
+                Name = model.Name,
+                Id = role?.Id.ToString(),
+                Location = role is null ? String.Empty : $"/api/v1/admin/roles/{role?.Id.ToString()}",
+            });
+        }
+
+        [HttpDelete]
+        [Authorize(Roles = ApplicationRoles.Admin)]
+        [Consumes(MediaTypeNames.Application.Json)]
+        public async Task<IActionResult> DeleteRole([FromBody] NewRoleModel model)
+        {
+            if (!ModelState.IsValid)
+                return BadRequest(ModelState);
+
+            var role = await roleManager.FindByNameAsync(model.Name);
+
+            if (role != null)
+                await roleManager.DeleteAsync(role);
+
+            return Ok();
+        }
+
+        #endregion
+
+
+        #region Specific Role
 
         [HttpGet("{guid}")]
         [Authorize(Roles = ApplicationRoles.Admin)]
@@ -43,33 +98,44 @@ namespace SlsApi.Controllers
             return NotFound();
         }
 
-        [HttpPost]
+        [HttpPut("{guid}")]
         [Authorize(Roles = ApplicationRoles.Admin)]
-        [Consumes(MediaTypeNames.Application.Json)]
-        public async Task<IActionResult> CreateNewRole([FromBody] NewRoleModel model)
+        public async Task<ActionResult<ApplicationRole>> UpdateById(string guid, [FromBody] NewRoleModel model)
         {
             if (!ModelState.IsValid)
-                return BadRequest(ModelState);
+                return BadRequest();
 
-            var roleExist = await roleManager.RoleExistsAsync(model.Name);
+            var role = await roleManager.FindByIdAsync(guid);
 
-            if (roleExist == false)
+            if (role != null)
             {
-                await roleManager.CreateAsync(new ApplicationRole
-                {
-                    Name = model.Name,
-                });
+                role.Name = model.Name;
+
+                await roleManager.UpdateAsync(role);
+
+                return Ok();
             }
 
-            var role = await roleManager.FindByNameAsync(model.Name);
-
-            return Ok(new CreatedResponse
-            { 
-                Success = role != null,
-                Name = model.Name,
-                Id = role?.Id.ToString(),
-                Location = role is null ? String.Empty : $"/api/v1/admin/roles/{role?.Id.ToString()}",
-            });
+            return BadRequest();
         }
+
+        [HttpDelete("{guid}")]
+        [Authorize(Roles = ApplicationRoles.Admin)]
+        public async Task<ActionResult<ApplicationRole>> DeleteById(string guid)
+        {
+            var role = await roleManager.FindByIdAsync(guid);
+
+            if (role != null)
+            {
+                await roleManager.DeleteAsync(role);
+
+                return Ok(role);
+            }
+
+            return NotFound();
+        }
+
+        #endregion
+
     }
 }
