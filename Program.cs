@@ -1,9 +1,11 @@
 using Application.Authentication;
 using Application.Identity;
+using SlsApi.Services;
 
 var builder = WebApplication.CreateBuilder(args);
 
-// Add services to the container.
+// Add app services to the container.
+builder.Services.AddSingleton<JwtTokenService>();
 
 // Add the controllers
 builder.Services.AddControllers();

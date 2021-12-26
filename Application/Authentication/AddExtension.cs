@@ -4,6 +4,7 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.IdentityModel.Tokens;
+using SlsApi;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -26,18 +27,24 @@ namespace Application.Authentication
             {
                 options.SaveToken = false;
                 options.IncludeErrorDetails = false;
-                options.RequireHttpsMetadata = false;
+                options.RequireHttpsMetadata = true;
+
+                options.MapInboundClaims = false;
 
                 options.TokenValidationParameters = new TokenValidationParameters()
                 {
-                    ValidateIssuer = false,
-                    ValidateAudience = false,
+                    ValidateIssuer = true,
+                    ValidateAudience = true,
                     ValidateLifetime = false,
 
+                    NameClaimType = ApplicationClaims.UserID,
+                    RoleClaimType = ApplicationClaims.UserRole,
+
+                    ValidIssuer = configuration["JWT:Issuer"],
+                    ValidAudience = configuration["JWT:Audience"],
                     IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(configuration["JWT:Secret"]))
                 };
             });
-
 
             return services;
         }
