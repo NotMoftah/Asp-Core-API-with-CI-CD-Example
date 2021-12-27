@@ -8,7 +8,7 @@ using System.Net.Mime;
 namespace SlsApi.Controllers
 {
     [ApiController]
-    [Route("api/v1/admin/[controller]")]
+    [Route("api/v1.0/admin/[controller]")]
     public class RolesController : ControllerBase
     {
         private readonly ILogger<RolesController> logger;
@@ -24,13 +24,24 @@ namespace SlsApi.Controllers
             this.roleManager = roleManager;
         }
 
-        #region Roles In General
 
         [HttpGet]
         [Authorize(Roles = ApplicationRoles.Admin)]
-        public ActionResult<IEnumerable<ApplicationRole>> Get()
+        public ActionResult<IEnumerable<string>> Get()
         {
-            return roleManager.Roles.ToList();
+            return roleManager.Roles.Select(e => e.Name).ToList();
+        }
+
+        [HttpGet("{guid}")]
+        [Authorize(Roles = ApplicationRoles.Admin)]
+        public async Task<ActionResult<ApplicationRole>> GetById([FromRoute] string guid)
+        {
+            var role = await roleManager.FindByIdAsync(guid);
+
+            if (role != null)
+                return Ok(role);
+
+            return NotFound();
         }
 
         [HttpPost]
@@ -40,102 +51,58 @@ namespace SlsApi.Controllers
         {
             if (!ModelState.IsValid)
                 return BadRequest(ModelState);
-
-            var roleExist = await roleManager.RoleExistsAsync(model.Name);
-
-            if (roleExist == false)
+            
+            // cehck role with the same name doesnt exist, then create it
+            if (await roleManager.RoleExistsAsync(model.Name))
             {
-                var result = await roleManager.CreateAsync(new ApplicationRole
+                await roleManager.CreateAsync(new ApplicationRole
                 {
                     Name = model.Name,
                 });
-
-                if (result.Succeeded == false)
-                    return Problem();
             }
 
+            // check no database shit hass accured before sending ok.
             var role = await roleManager.FindByNameAsync(model.Name);
+
+            if (role is null)
+                return Problem();
 
             return Ok(new CreatedResponse
             { 
-                Success = role != null,
+                Success = true,
                 Name = model.Name,
-                Id = role?.Id.ToString(),
-                Location = role is null ? String.Empty : $"/api/v1/admin/roles/{role?.Id.ToString()}",
+                Id = role?.Id.ToString()
             });
         }
 
-        [HttpDelete]
+        [HttpPut("{guid}")]
         [Authorize(Roles = ApplicationRoles.Admin)]
         [Consumes(MediaTypeNames.Application.Json)]
-        public async Task<IActionResult> DeleteRole([FromBody] NewRoleModel model)
+        public async Task<ActionResult<ApplicationRole>> UpdateRole([FromRoute] string guid)
+        {
+            var role = await roleManager.FindByIdAsync(guid);
+
+            if (role is null)
+                return NotFound();
+
+            return BadRequest($"Role {role.Name} can not be updated!");
+        }
+
+        [HttpDelete("{guid}")]
+        [Authorize(Roles = ApplicationRoles.Admin)]
+        [Consumes(MediaTypeNames.Application.Json)]
+        public async Task<IActionResult> DeleteRole([FromQuery] string guid)
         {
             if (!ModelState.IsValid)
                 return BadRequest(ModelState);
 
-            var role = await roleManager.FindByNameAsync(model.Name);
+            var role = await roleManager.FindByIdAsync(guid);
 
             if (role != null)
                 await roleManager.DeleteAsync(role);
 
             return Ok();
         }
-
-        #endregion
-
-
-        #region Specific Role
-
-        [HttpGet("{guid}")]
-        [Authorize(Roles = ApplicationRoles.Admin)]
-        public async Task<ActionResult<ApplicationRole>> GetById(string guid)
-        {
-            var role = await roleManager.FindByIdAsync(guid);
-
-            if (role != null)
-                return Ok(role);
-
-            return NotFound();
-        }
-
-        [HttpPut("{guid}")]
-        [Authorize(Roles = ApplicationRoles.Admin)]
-        public async Task<ActionResult<ApplicationRole>> UpdateById(string guid, [FromBody] NewRoleModel model)
-        {
-            if (!ModelState.IsValid)
-                return BadRequest();
-
-            var role = await roleManager.FindByIdAsync(guid);
-
-            if (role != null)
-            {
-                role.Name = model.Name;
-
-                await roleManager.UpdateAsync(role);
-
-                return Ok();
-            }
-
-            return BadRequest();
-        }
-
-        [HttpDelete("{guid}")]
-        [Authorize(Roles = ApplicationRoles.Admin)]
-        public async Task<ActionResult<ApplicationRole>> DeleteById(string guid)
-        {
-            var role = await roleManager.FindByIdAsync(guid);
-
-            if (role != null)
-            {
-                await roleManager.DeleteAsync(role);
-
-                return Ok(role);
-            }
-
-            return NotFound();
-        }
-
-        #endregion
 
     }
 }
