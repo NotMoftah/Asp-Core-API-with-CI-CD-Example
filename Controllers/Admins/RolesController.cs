@@ -27,9 +27,9 @@ namespace SlsApi.Controllers
 
         [HttpGet]
         [Authorize(Roles = ApplicationRoles.Admin)]
-        public ActionResult<IEnumerable<string>> Get()
+        public ActionResult<IEnumerable<ApplicationRole>> Get()
         {
-            return roleManager.Roles.Select(e => e.Name).ToList();
+            return roleManager.Roles.ToList();
         }
 
         [HttpGet("{guid}")]
